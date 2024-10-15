@@ -1,3 +1,5 @@
+from multiprocessing.util import sub_warning
+
 from aiogram import Bot, Dispatcher
 from abc import ABC, abstractmethod
 
@@ -7,10 +9,10 @@ class BaseBot(ABC):
         self.bot = Bot(token=token)
         self.dp = Dispatcher()
 
-    def start(self):
+    async def start(self):
         """Метод для запуска работы"""
         self.register_handlers()
-        self.dp.start_polling(self.bot)
+        await self.dp.start_polling(self.bot)
 
     @abstractmethod
     def register_handlers(self):
