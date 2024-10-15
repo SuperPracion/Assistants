@@ -1,2 +1,5 @@
 .gitignore
-settings.py
+/assistants/english_words_gamer/settings.py
+/assistants/home_libraby/settings.py
+/assistants/reminiscent_about_classes/settings.py
+/assistants/mathematical_examples/settings.py
