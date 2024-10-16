@@ -1,12 +1,14 @@
 import asyncio
 
-from assistants.reminiscent_about_classes.reminiscent_about_classes_bot import MyBot
-from assistants.reminiscent_about_classes.settings import bot_token
+from assistants.reminiscent_about_classes.reminiscent_about_classes_bot import ReminiscentAboutClassesBot
+from assistants.english_words_gamer.english_words_gamer_bot import EnglishWordsGamerBot
 
 async def main():
-    my_bot = MyBot(bot_token)
-    await my_bot.start()
+    remin_bot = ReminiscentAboutClassesBot()
+    await remin_bot.start()
 
+    # english_bot = EnglishWordsGamerBot()
+    # await english_bot.start()
 
 if __name__ == "__main__":
     asyncio.run(main())
