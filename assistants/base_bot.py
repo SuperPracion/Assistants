@@ -9,10 +9,10 @@ class BaseBot(ABC):
         self.bot = Bot(token=token)
         self.dp = Dispatcher()
 
-    async def start(self):
+    async def start(self, *args, **kwargs):
         """Метод для запуска работы"""
         self.register_handlers()
-        await self.dp.start_polling(self.bot)
+        await self.dp.start_polling(self.bot, *args, **kwargs)
 
     @abstractmethod
     def register_handlers(self):
