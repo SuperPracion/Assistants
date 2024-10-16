@@ -1,22 +1,23 @@
+from assistants.base_bot import BaseBot
+from assistants.english_words_gamer import settings
+
 import asyncio
-import settings
-from aiogram import types
 from tinydb import TinyDB, Query
 from random import randint, shuffle
-from assistants.base_bot import BaseBot
+from aiogram import types
 from aiogram.filters.command import Command
 
 
-class MyBot(BaseBot):
-    def __init__(self, token: str):
-        super().__init__(token)
+class EnglishWordsGamerBot(BaseBot):
+    def __init__(self):
+        super().__init__(settings.bot_token)
 
     def register_handlers(self):
         # TODO добавить обработку только для админов и конкретного чата
         @self.dp.message(Command('start'))
         async def start_command(message: types.Message):
             while True:
-                with (TinyDB('words.json', encoding='utf-8') as words):
+                with TinyDB('words.json', encoding='utf-8') as words:
                     rnd_words = list()
                     for _ in range(4):
                         rnd_words.append(words.search(Query().id == randint(0, len(words)))[0])
@@ -31,7 +32,7 @@ class MyBot(BaseBot):
                     is_anonymous=False
                 )
 
-                with (TinyDB('polls.json', encoding='utf-8') as polls):
+                with TinyDB('polls.json', encoding='utf-8') as polls:
                     polls.insert({'poll_id': send_poll.poll.id,
                                   'word_id': correct_word['id'],
                                   'correct_option_id': send_poll.poll.correct_option_id})
