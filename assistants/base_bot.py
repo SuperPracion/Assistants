@@ -1,5 +1,3 @@
-from multiprocessing.util import sub_warning
-
 from aiogram import Bot, Dispatcher
 from abc import ABC, abstractmethod
 
