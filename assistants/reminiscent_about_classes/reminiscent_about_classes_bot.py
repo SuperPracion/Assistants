@@ -1,6 +1,6 @@
 from assistants.base_bot import BaseBot
 from assistants.reminiscent_about_classes.settings import *
-from assistants.reminiscent_about_classes.message import Message
+from assistants.reminiscent_about_classes.event_message import EventMessage
 from databases.google_sheets_database import GoogleSheets
 
 import asyncio
@@ -14,14 +14,13 @@ from aiogram.types import KeyboardButton, Message, ReplyKeyboardMarkup, InlineKe
 class ReminiscentAboutClassesBot(BaseBot):
     def __init__(self):
         super().__init__(TOKEN, DB_NAME)
-        self.timers = dict()
         self.sheet = GoogleSheets(SCOPE, CREDS, TABLE_NAME, WORKSHEET).sheet
 
     def get_delta(self, callback):
-        select_request = '''SELECT * FROM messages WHERE message_id = (?)'''
-        message = Message(*next(self.cursor.execute(select_request, (callback.message.message_i,))))
+        select_event_message = '''SELECT * FROM messages WHERE message_id = (?)'''
+        event = EventMessage(*next(self.cursor.execute(select_event_message, (callback.message.message_id,))))
 
-        response = self.sheet.get_all_records()[message.row_number]
+        response = self.sheet.get_all_records()[event.row_number]
         return (datetime.datetime.now() - datetime.datetime.strptime(response['Дата'], '%d.%m.%Y %H:%S')).seconds
 
     def register_handlers(self):
@@ -31,7 +30,7 @@ class ReminiscentAboutClassesBot(BaseBot):
                 keyboard=[
                     [KeyboardButton(text='📖 GoogleSheets')],
                     [KeyboardButton(text='📚 Текущие события')],
-                    [KeyboardButton(text='💰Ставка, кто проебёт сроки')]
+                    [KeyboardButton(text='💰Ставка, кто сольётся следующим')]
                 ],
                 resize_keyboard=True,
             )
@@ -69,6 +68,7 @@ class ReminiscentAboutClassesBot(BaseBot):
                     reply_markup=builder.as_markup()
                 )
                 self.cursor.execute(insert_request, (row_number, sending_message.message_id))
+                self.connect.commit()
 
         @self.dp.callback_query(F.data == 'remind_in_an_hour')
         async def remind_in_an_hour(callback: CallbackQuery):
@@ -104,24 +104,23 @@ class ReminiscentAboutClassesBot(BaseBot):
 
         @self.dp.callback_query(F.data == 'subscribe')
         async def subscribe(callback: CallbackQuery):
-            select_request = '''SELECT * FROM messages WHERE message_id = (?)'''
-            message = Message(*next(self.cursor.execute(select_request, (callback.message.message_i,))))
+            select_event_message = '''SELECT * FROM messages WHERE message_id = (?)'''
+            event = EventMessage(*next(self.cursor.execute(select_event_message, (callback.message.message_id,))))
 
-            response = self.sheet.get_all_records()[message.row_number]
+            response = self.sheet.get_all_records()[event.row_number]
             response['Участники'] += f'{callback.from_user.username}\n'
-            self.sheet.update_acell(f'G{message.row_number + 2}', response['Участники'])
+            self.sheet.update_acell(f'G{event.row_number + 2}', response['Участники'])
             await callback.message.answer(f'Вы подписались на {response['Название']}')
 
         @self.dp.callback_query(F.data == 'unsubscribe')
         async def unsubscribe(callback: CallbackQuery):
-            select_request = '''SELECT * FROM messages WHERE message_id = (?)'''
-            message = Message(*next(self.cursor.execute(select_request, (callback.message.message_i,))))
-
-            response = self.sheet.get_all_records()[message.row_number]
+            select_event_message = '''SELECT * FROM messages WHERE message_id = (?)'''
+            event = EventMessage(*next(self.cursor.execute(select_event_message, (callback.message.message_id,))))
+            response = self.sheet.get_all_records()[event.row_number]
             names = response['Участники'].split('\n')
             names.remove(callback.from_user.username)
             response['Участники'] = '\n'.join(names)
-            self.sheet.update_acell(f'G{message.row_number + 2}', response['Участники'])
+            self.sheet.update_acell(f'G{event.row_number + 2}', response['Участники'])
             await callback.message.answer(f'Вы отписались от {response['Название']}')
 
         @self.dp.message(F.text == '💰Ставка, кто сольётся следующим')
